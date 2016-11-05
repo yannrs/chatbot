@@ -1,0 +1,7 @@
+
+
+
+SLACK_BOT_TOKEN = 'xoxb-100786786962-4QVO6gqENojSxqAAPr6jZw6k'
+
+BOT_ID = 'U2YP4P4UA'
+BOT_NAME = 'alexa'
