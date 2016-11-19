@@ -9,50 +9,96 @@ from slackclient import SlackClient
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-EXAMPLE_COMMAND = "do"
+AT_CHANNEL_BOT = "D2Y397HBK"
+
+IDEA_NEW = 0
+IDEA_TOO_WIDE = 1
+IDEA_TOO_FAR = 2
+
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(SLACK_BOT_TOKEN)
 
 
-def handle_command(command, channel):
-    """
-        Receives commands directed at the bot and determines if they
-        are valid commands. If so, then acts on the commands. If not,
-        returns back what it needs for clarification.
-    """
-    response = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
-               "* command with numbers, delimited by spaces."
-    if command.startswith(EXAMPLE_COMMAND):
-        response = "Sure...write some more code then I can do that!"
+""" From the text sent by a Human, this function converts sentences to ideas, and add the mood as an extra feature
+Input:
+    - bot_input: String
+Output:
+    - [ideas], mood
+"""
+def parse_bot_input(bot_input):
+    return -1, -1
+
+
+""" Try to find near ideas or answer to one question
+Input:
+    - ideas: [ideas]
+Ouput:
+    - [ ideas ]
+"""
+def get_new_ideas(ideas):
+    return [], 2
+
+
+""" From ideas and the mood of the user, generate an answer or a new say
+Input:
+    - ideas: [ideas]
+    - mood: mood
+Output:
+    - String
+"""
+def generate_bot_answer(ideas, mood):
+    return "-1"
+
+
+def send_answer(response, channel):
     slack_client.api_call("chat.postMessage", channel=channel,
                           text=response, as_user=True)
 
 
-def parse_slack_output(slack_rtm_output):
-    """
-        The Slack Real Time Messaging API is an events firehose.
-        this parsing function returns None unless a message is
-        directed at the Bot, based on its ID.
-    """
-    output_list = slack_rtm_output
-    if output_list and len(output_list) > 0:
-        for output in output_list:
-            if output and 'text' in output and AT_BOT in output['text']:
-                # return text after the @ mention, whitespace removed
-                return output['text'].split(AT_BOT)[1].strip().lower(), \
-                       output['channel']
-    return None, None
+def one_iteration(track_idea):
+        bot_input = slack_client.rtm_read()
+        for output in bot_input:
+            print output
+            if output and 'text' in output and \
+                    (AT_BOT in output['text'] or \
+                             (AT_CHANNEL_BOT in output.get('channel', '') and \
+                              BOT_ID not in output.get('user', ''))):
+                ideas, mood = parse_bot_input(output['text'])
+
+                # Save the evolution of ideas
+                if output['user'] in track_idea:
+                    track_idea[output['user']].append((ideas, mood))
+                else:
+                    track_idea[output['user']] = [(ideas, mood)]
+
+                ## Check for near idea
+                new_ideas, status = get_new_ideas(ideas)
+
+                # Generate the appropriate answer
+                answer = ""
+                if status == IDEA_NEW:
+                    # We found something to say
+                     answer = generate_bot_answer(ideas, mood)
+
+                elif status == IDEA_TOO_WIDE:
+                    # The user have to select a more specific subject
+                     answer = "Sorry could you be more precise ?"
+
+                elif status == IDEA_TOO_FAR:
+                    # Ask to focus on the right topic
+                     answer = "Sorry could we come back to a Georgia tech related topic ?"
+
+                send_answer(answer, output['channel'])
 
 
 def main_slack():
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+    READ_WEBSOCKET_DELAY = 1    # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print("StarterBot connected and running!")
+        track_idea = {}
         while True:
-            command, channel = parse_slack_output(slack_client.rtm_read())
-            if command and channel:
-                handle_command(command, channel)
+            one_iteration(track_idea)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
