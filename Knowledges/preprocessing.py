@@ -4,7 +4,7 @@
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-# import nltk
+import nltk
 # from nltk.corpus import state_union
 from nltk.tokenize import PunktSentenceTokenizer
 from nltk.stem import WordNetLemmatizer
@@ -17,6 +17,8 @@ from sklearn.svm import SVC, LinearSVC, NuSVC
 
 import pickle
 import random
+
+from core_idea import Idea
 
 path = 'C:\Users\yann\Documents\Mes fichiers\Cours\GeorgiaTech\Fall 2016\CS   7637 - Knowledge based AI\Project3\Data\\'
 ps = PorterStemmer()
@@ -47,13 +49,14 @@ def preproc_tag(data):
 def preproc(data):
     txt = []
     for text in data:
+        txt.append(Idea(text).generate())
         # txt.append(preproc_it(text))
-        txt.append(preproc_tag(text))
+        # txt.append(preproc_tag(text))
     return txt
 
 
 def main_preprocess():
-    data = loadFile('gatech_wiki2.csv')
+    data = loadFile('gatech_wiki_clean.csv')
 
     for line in data:
         print line
@@ -64,28 +67,32 @@ def main_preprocess():
         print line
 
 
+    all_words = nltk.FreqDist(filt_harm_data)
 
+    word_features = list(all_words.keys())[:3000]
+
+
+    ## Learner
+    featuresets = word_features
+    # set that we'll train our classifier with
+    training_set = featuresets[:1900]
+
+    # set that we'll test against.
+    testing_set = featuresets[1900:]
+    classifier = nltk.NaiveBayesClassifier.train(training_set)
+    print("Classifier accuracy percent:", (nltk.classify.accuracy(classifier, testing_set))*100)
+    classifier.show_most_informative_features(15)
+
+    ## Save a model
+    save_classifier = open("naivebayes.pickle", "wb")
+    pickle.dump(classifier, save_classifier)
+    save_classifier.close()
 
     return -1
 
 
 
 
-
-class Mood:
-    def __init__(self):
-        self.text = ""
-        self.frame = {}
-
-    def compare(self, idea):
-        return -1
-
-    """
-    data = String
-    """
-    def convert_data(self, data):
-
-        return
 
 
 if __name__ == '__main__':

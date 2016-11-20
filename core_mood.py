@@ -1,7 +1,7 @@
 
 
-class Idea:
-    def __init__(self, text):
+class Mood:
+    def __init__(self):
         self.text = ""
         self.frame = {}
 
@@ -14,10 +14,3 @@ class Idea:
     def convert_data(self, data):
 
         return
-
-
-
-def generateIdea(text):
-    return -1
-
-

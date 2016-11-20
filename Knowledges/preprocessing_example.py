@@ -113,7 +113,7 @@ print(lemmatizer.lemmatize("python"))
 print(lemmatizer.lemmatize("better", pos="a"))
 print(lemmatizer.lemmatize("best", pos="a"))
 print(lemmatizer.lemmatize("run"))
-print(lemmatizer.lemmatize("run",'v'))
+print(lemmatizer.lemmatize("run", 'v'))
 
 
 from nltk.corpus import wordnet

@@ -5,7 +5,7 @@ from variables import BOT_ID, SLACK_BOT_TOKEN
 import os
 import time
 from slackclient import SlackClient
-
+from core_idea import Idea
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -27,17 +27,26 @@ Output:
     - [ideas], mood
 """
 def parse_bot_input(bot_input):
-    return -1, -1
+    ideas = []
+    mood = -1
+
+    for part in bot_input:
+        ideas.apppend(Idea(part).generate())
+
+    return ideas, mood
 
 
 """ Try to find near ideas or answer to one question
 Input:
     - ideas: [ideas]
-Ouput:
+Output:
     - [ ideas ]
+    - status = IDEA_NEW or IDEA_TOO_WIDE or IDEA_TOO_FAR
 """
 def get_new_ideas(ideas):
-    return [], 2
+    idea_new = []
+
+    return idea_new, 2
 
 
 """ From ideas and the mood of the user, generate an answer or a new say
