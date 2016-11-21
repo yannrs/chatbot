@@ -18,7 +18,7 @@ from sklearn.svm import SVC, LinearSVC, NuSVC
 import pickle
 import random
 
-from core_idea import Idea
+from core_idea import *
 
 path = 'C:\Users\yann\Documents\Mes fichiers\Cours\GeorgiaTech\Fall 2016\CS   7637 - Knowledge based AI\Project3\Data\\'
 ps = PorterStemmer()
@@ -26,17 +26,18 @@ ps = PorterStemmer()
 lemmatizer = WordNetLemmatizer()
 
 def loadFile(filename):
-    # file = open(path+filename, 'r')
-    # text = [line[:-2].decode('utf-8') for line in file.readlines()]
-    # file.close()
+    file = open(path+filename, 'r')
+    text = [line[:-2].decode('utf-8') for line in file.readlines()]
+    file.close()
+    return text
 
-    text = "﻿Other Georgia Tech-affiliated buildings in the area host the Center for Quality Growth and Regional Development, the Georgia Tech Enterprise Innovation Institute, the Advanced Technology Development Center, VentureLab, and the Georgia Electronics Design Center. Technology Square also hosts a variety of restaurants and businesses, including the headquarters of notable consulting companies like Accenture and also including the official Institute bookstore, a Barnes & Noble bookstore, and a Georgia Tech-themed Waffle House.[57][61]"
-    text = text.decode('utf-8')
+    # text = "Other Georgia Tech-affiliated buildings in the area host the Center for Quality Growth and Regional Development, the Georgia Tech Enterprise Innovation Institute, the Advanced Technology Development Center, VentureLab, and the Georgia Electronics Design Center. Technology Square also hosts a variety of restaurants and businesses, including the headquarters of notable consulting companies like Accenture and also including the official Institute bookstore, a Barnes & Noble bookstore, and a Georgia Tech-themed Waffle House.[57][61]"
+    # text = text.decode('utf-8')
     return [text]
 
+stop_words = set(stopwords.words('english'))
 
 def preproc_it(data):
-    stop_words = set(stopwords.words('english'))
     return [lemmatizer.lemmatize(w) for w in word_tokenize(data) if not w in stop_words]
 
 
@@ -49,7 +50,7 @@ def preproc_tag(data):
 def preproc(data):
     txt = []
     for text in data:
-        txt.append(Idea(text).generate())
+        txt.append(generateIdeas(text))
         # txt.append(preproc_it(text))
         # txt.append(preproc_tag(text))
     return txt
@@ -67,26 +68,26 @@ def main_preprocess():
         print line
 
 
-    all_words = nltk.FreqDist(filt_harm_data)
-
-    word_features = list(all_words.keys())[:3000]
-
-
-    ## Learner
-    featuresets = word_features
-    # set that we'll train our classifier with
-    training_set = featuresets[:1900]
-
-    # set that we'll test against.
-    testing_set = featuresets[1900:]
-    classifier = nltk.NaiveBayesClassifier.train(training_set)
-    print("Classifier accuracy percent:", (nltk.classify.accuracy(classifier, testing_set))*100)
-    classifier.show_most_informative_features(15)
-
-    ## Save a model
-    save_classifier = open("naivebayes.pickle", "wb")
-    pickle.dump(classifier, save_classifier)
-    save_classifier.close()
+    # all_words = nltk.FreqDist(filt_harm_data)
+    #
+    # word_features = list(all_words.keys())[:3000]
+    #
+    #
+    # ## Learner
+    # featuresets = word_features
+    # # set that we'll train our classifier with
+    # training_set = featuresets[:1900]
+    #
+    # # set that we'll test against.
+    # testing_set = featuresets[1900:]
+    # classifier = nltk.NaiveBayesClassifier.train(training_set)
+    # print("Classifier accuracy percent:", (nltk.classify.accuracy(classifier, testing_set))*100)
+    # classifier.show_most_informative_features(15)
+    #
+    # ## Save a model
+    # save_classifier = open("naivebayes.pickle", "wb")
+    # pickle.dump(classifier, save_classifier)
+    # save_classifier.close()
 
     return -1
 

@@ -7,7 +7,7 @@ BOT_ID = 'U2YP4P4UA'
 BOT_NAME = 'alexa'
 
 
-MAIN_ATTRIBUTE = ['NNP', 'POS', 'IN', 'CD', ',', ':', 'NNS', 'JJ', 'DT', 'PRP', 'NN', 'VBP', 'VBN', '.', 'CC', 'WDT', 'VBZ', '(', ')', 'RB', 'VBD', 'PRP$', 'TO', 'VBG', 'MD', 'VB', 'JJR', 'WP', 'NNPS', 'JJS', 'RP', 'WRB', 'RBR', 'PDT', 'RBS', '$', 'EX', '``', "''", 'WP$']
+MAIN_ATTRIBUTE = ['NNP', 'NNS', 'JJ', 'NN', 'VBG', 'VBN', 'VBP', 'VBZ' ]
 
 ALL_ATTRIBUTE = ['NNP', 'POS', 'IN', 'CD', ',', ':', 'NNS', 'JJ', 'DT', 'PRP', 'NN', 'VBP', 'VBN', '.', 'CC', 'WDT', 'VBZ', '(', ')', 'RB', 'VBD', 'PRP$', 'TO', 'VBG', 'MD', 'VB', 'JJR', 'WP', 'NNPS', 'JJS', 'RP', 'WRB', 'RBR', 'PDT', 'RBS', '$', 'EX', '``', "''", 'WP$']
 
