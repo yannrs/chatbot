@@ -158,9 +158,14 @@ all_words = nltk.FreqDist(all_words)
 
 word_features = list(all_words.keys())[:3000]
 
-
+def document_features(document):
+    document_words = set(document)
+    features = {}
+    for word in word_features:
+        features['contains({})'.format(word)] = (word in document_words)
+    return features
 ## Learner
-featuresets = word_features
+featuresets = [(document_features(d), c) for (d, c) in documents]
 # set that we'll train our classifier with
 training_set = featuresets[:1900]
 

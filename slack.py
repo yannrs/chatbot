@@ -6,6 +6,7 @@ import os
 import time
 from slackclient import SlackClient
 from core_idea import Idea
+from Knowledges.preprocessing import *
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -15,10 +16,14 @@ IDEA_NEW = 0
 IDEA_TOO_WIDE = 1
 IDEA_TOO_FAR = 2
 
+THRESHOLD_DISP = 5
+THRESHOLD_NB = 10
+
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(SLACK_BOT_TOKEN)
-
+Classifier_topic = loadClassifier("naivebayes.pickle")
+knowledge_idea = loadFile('saveIdeas.csv')
 
 """ From the text sent by a Human, this function converts sentences to ideas, and add the mood as an extra feature
 Input:
@@ -45,8 +50,28 @@ Output:
 """
 def get_new_ideas(ideas):
     idea_new = []
+    status = IDEA_NEW
 
-    return idea_new, 2
+    # Get all labels
+    idea_label = []
+    for idea in ideas:
+        idea_label.append(Classifier_topic.predict(idea.features))
+
+    # Get the right idea linked
+    for k in knowledge_idea:
+        if k.id in idea_label:
+            idea_new.append(k)
+
+    # Check the wide & the number of idea found
+    stats = analyseIdeas(idea_new)
+    if stats['max'] > THRESHOLD_DISP:
+        status = IDEA_TOO_FAR
+    elif stats['nb'] > THRESHOLD_NB:
+        status = IDEA_TOO_WIDE
+    else:
+        status = IDEA_NEW
+
+    return idea_new, status
 
 
 """ From ideas and the mood of the user, generate an answer or a new say
@@ -57,7 +82,13 @@ Output:
     - String
 """
 def generate_bot_answer(ideas, mood):
-    return "-1"
+    out = ""
+
+    # First try: just concat key feature
+    for idea in ideas:
+        out += ';'.join([k for k in idea.features if idea.features[k]])
+
+    return out
 
 
 def send_answer(response, channel):

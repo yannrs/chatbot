@@ -10,20 +10,44 @@ from Knowledges.preprocessing import *
 
 
 class Idea:
-    def __init__(self, text):
-        self.text = text
-        self.frame = {}
+    def __init__(self, text, id=-1):
+        self.id = id
+        self.text = text            # ''
+        self.frame = {}             # {'NP':[ 'Charles', ....], 'VB': [...] }
+        self.features = {}          # {'word1': 1, 'word2':0, 'word3': 10, .... }
 
     def __str__(self):
-        return str(self.frame)
+        return 'Idea: ' + str(self.frame)
 
     def __repr__(self):
-        return str(self.frame)
+        return 'Idea: ' + str(self.id) + ' [' + str(self.frame) + ']'
 
     def generate(self):
         # print begin
         self.frame = generateIdea(self.text)
         return self
+
+    def add_feature(self, word_features):
+        for word in word_features:
+            # self.features['contains({})'.format(word)] = self.text.count(word)
+            # self.features['contains({})'.format(word)] = (word in self.text)
+            # key = word.encode('ascii', 'ignore')
+            # if
+            self.features[word.encode('ascii', 'ignore')] = (word in self.text)
+
+    def toSave(self):
+        content = {}
+        content['id'] = self.id
+        content['text'] = self.text
+        content['frame'] = self.frame
+        content['features'] = self.features
+        return content
+
+    def loadIdea(self, dico):
+        self.id = dico['id']
+        self.text = dico['text']
+        self.frame = dico['frame']
+        self.features = dico['features']
 
     def compare(self, idea):
         out = 0
@@ -47,6 +71,9 @@ class Idea:
                         mean_all_label = 0
                 out += WEIGHT_SENTENCE.get(label, 'DEFAULT') * mean_all_label / float(len(self.frame.get(label, [''])))
         return out
+
+
+
 
 def select_wordnet(label):
     if label in ['VBP', 'VBD', 'VBD', 'VB']:
@@ -111,14 +138,16 @@ def generateIdeas_(text):
 
     return frames_txt
 
-def generateIdeas(text):
+
+def generateIdeas(text, id=0):
     # Cut sentences by meaning
     tokenized_txt = master_tokenizer.tokenize(text)
 
     # Label content
     ideas = []
+    id = id
     for token in tokenized_txt:
-        ideas.append(Idea(token).generate())
+        ideas.append(Idea(token, id).generate())
 
     return ideas
 
@@ -142,6 +171,24 @@ def createFrame(sentence, frame={}):
         else:
             frame[att].append(_value.lower())
     return frame
+
+
+""" Return the max and mean distance between idea
+"""
+def analyseIdeas(listIdea):
+    d_max = -1
+    d_mean = 0
+    for idea in listIdea:
+        for idea2 in listIdea:
+            if idea is not idea2:
+                d = idea.compare(idea2)
+                d_mean += d
+                if d_max < d:
+                    d_max = d
+    d_mean /= 2*len(listIdea)
+    return {'nb': len(listIdea), 'max': d_max, 'mean': d_mean}
+
+
 
 
 if __name__ == '__main__':
