@@ -5,8 +5,10 @@ from variables import BOT_ID, SLACK_BOT_TOKEN
 import os
 import time
 from slackclient import SlackClient
-from core_idea import Idea
-from Knowledges.preprocessing import *
+
+# from Knowledges.preprocessing import *
+from core_idea import *
+from variables import *
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
@@ -15,15 +17,17 @@ AT_CHANNEL_BOT = "D2Y397HBK"
 IDEA_NEW = 0
 IDEA_TOO_WIDE = 1
 IDEA_TOO_FAR = 2
+IDEA_NO = 3
 
 THRESHOLD_DISP = 5
-THRESHOLD_NB = 10
+THRESHOLD_NB = 50
 
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(SLACK_BOT_TOKEN)
-Classifier_topic = loadClassifier("naivebayes.pickle")
-knowledge_idea = loadFile('saveIdeas.csv')
+Classifier_topic = loadClassifier(path + "naivebayes.pickle")
+knowledge_idea = loadIdeas(path + 'saveIdeas.csv')
+
 
 """ From the text sent by a Human, this function converts sentences to ideas, and add the mood as an extra feature
 Input:
@@ -36,7 +40,7 @@ def parse_bot_input(bot_input):
     mood = -1
 
     for part in bot_input:
-        ideas.apppend(Idea(part).generate())
+        ideas.append(Idea(part).generate())
 
     return ideas, mood
 
@@ -55,19 +59,26 @@ def get_new_ideas(ideas):
     # Get all labels
     idea_label = []
     for idea in ideas:
-        idea_label.append(Classifier_topic.predict(idea.features))
+        idea_label.append(Classifier_topic.classify(idea.features))
+    print "idea_label", idea_label
 
     # Get the right idea linked
     for k in knowledge_idea:
-        if k.id in idea_label:
-            idea_new.append(k)
+        for k_sub in k:
+            if k_sub.id in idea_label:
+                print k_sub
+                idea_new.append(k_sub)
+    print 'idea_new', len(idea_new)
 
     # Check the wide & the number of idea found
     stats = analyseIdeas(idea_new)
+    print 'stats', stats
     if stats['max'] > THRESHOLD_DISP:
         status = IDEA_TOO_FAR
     elif stats['nb'] > THRESHOLD_NB:
         status = IDEA_TOO_WIDE
+    elif stats['nb'] == 0:
+        status = IDEA_NO
     else:
         status = IDEA_NEW
 
@@ -86,7 +97,7 @@ def generate_bot_answer(ideas, mood):
 
     # First try: just concat key feature
     for idea in ideas:
-        out += ';'.join([k for k in idea.features if idea.features[k]])
+        out += ';'.join(set([k for k in idea.features if idea.features[k]]))
 
     return out
 
@@ -104,6 +115,7 @@ def one_iteration(track_idea):
                     (AT_BOT in output['text'] or \
                              (AT_CHANNEL_BOT in output.get('channel', '') and \
                               BOT_ID not in output.get('user', ''))):
+
                 ideas, mood = parse_bot_input(output['text'])
 
                 # Save the evolution of ideas
@@ -132,6 +144,38 @@ def one_iteration(track_idea):
                 send_answer(answer, output['channel'])
 
 
+def test_main(txt):
+    ideas, mood = parse_bot_input(txt)
+    print "parse_bot_input"
+    print ideas, mood
+
+    ## Check for near idea
+    new_ideas, status = get_new_ideas(ideas)
+    print 'get_new_ideas'
+    print len(new_ideas), status
+
+    # Generate the appropriate answer
+    answer = ""
+    if status == IDEA_NEW:
+        # We found something to say
+         answer = generate_bot_answer(new_ideas, mood)
+
+    elif status == IDEA_TOO_WIDE:
+        # The user have to select a more specific subject
+         answer = "Sorry could you be more precise ?"
+
+    elif status == IDEA_TOO_FAR:
+        # Ask to focus on the right topic
+         answer = "Sorry could we come back to a Georgia tech related topic ?"
+
+    else:
+        # We don't understand the request or the saying of the person
+        answer = "Sorry I don't understand what you said."
+
+    print "answer: ", answer
+    return answer
+
+
 def main_slack():
     READ_WEBSOCKET_DELAY = 1    # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
@@ -143,3 +187,6 @@ def main_slack():
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
 
+
+if __name__ == '__main__':
+    test_main(['georgia tech is the best'])

@@ -5,6 +5,7 @@ import os, sys
 
 path = 'C:\Users\yann\Videos\Mooc\Knowledge-Based AI_ Cognitive Systems Videos\Knowledge-Based AI_ Cognitive Systems Subtitles\\'
 
+path = 'C:\Users\yann\Documents\Mes fichiers\Cours\GeorgiaTech\Fall 2016\CS   7637 - Knowledge based AI\Project3\Data\\'
 
 ## Convert srt file to text file:
 
@@ -49,5 +50,23 @@ def applyAllFolder(mainPath):
         aggregateAllTopic(folder)
 
 
+def cleanMoreTxt(filename):
+    file = open(path + filename, 'r')
+    dataAll = file.readlines()
+    file.close()
+    dataAll_n = []
+    for data in dataAll:
+        out = ""
+        l = data.split('[')
+        for i in l:
+            out += i.split(']')[-1]
+        dataAll_n.append(out)
+    file = open(path+'_' + filename, 'wb')
+    for d in dataAll_n:
+        file.writelines(d)
+    file.close()
+
 if __name__ == '__main__':
-    applyAllFolder(path)
+    # applyAllFolder(path)
+
+    cleanMoreTxt('gatech_wiki_clean.csv')

@@ -7,7 +7,7 @@ from nltk.tokenize import PunktSentenceTokenizer
 
 from variables import WEIGHT_SENTENCE, MAIN_ATTRIBUTE
 from Knowledges.preprocessing import *
-
+import json
 
 class Idea:
     def __init__(self, text, id=-1):
@@ -39,18 +39,20 @@ class Idea:
         content = {}
         content['id'] = self.id
         content['text'] = self.text
-        content['frame'] = self.frame
-        content['features'] = self.features
+        content['frame'] = json.dumps(self.frame)
+        content['features'] = json.dumps(self.features)
         return content
 
     def loadIdea(self, dico):
         self.id = dico['id']
         self.text = dico['text']
-        self.frame = dico['frame']
-        self.features = dico['features']
+        self.frame = json.loads(dico['frame'])
+        self.features = json.loads(dico['features'])
+        return self
 
     def compare(self, idea):
         out = 0
+        error = ""
         for label in self.frame.keys():
             label_wordnet = select_wordnet(label)
             if label in idea.frame and label in MAIN_ATTRIBUTE and label_wordnet:
@@ -64,12 +66,13 @@ class Idea:
                                 w2 = wordnet.synset(str(word2)+'.'+label_wordnet+'.01')
                                 mean_label += w1.wup_similarity(w2)
                             except:
-                                print word2
+                                error += word2 + ';'
                         mean_all_label += mean_label / float(len(idea.frame.get(label, [''])))
-                        print mean_all_label, mean_label
+                        # print mean_all_label, mean_label
                     except:
                         mean_all_label = 0
-                out += WEIGHT_SENTENCE.get(label, 'DEFAULT') * mean_all_label / float(len(self.frame.get(label, [''])))
+                out += WEIGHT_SENTENCE.get(label, WEIGHT_SENTENCE['DEFAULT']) * mean_all_label / float(len(self.frame.get(label, [''])))
+        print "error", error
         return out
 
 
@@ -157,7 +160,7 @@ def generateIdea(text):
     tagged = nltk.pos_tag(words)
     return createFrame(tagged)
 
-
+import copy
 
 attribute = []
 """ Function
@@ -169,13 +172,32 @@ def createFrame(sentence, frame={}):
         if att not in frame:
             frame[att] = [_value.lower()]
         else:
-            frame[att].append(_value.lower())
-    return frame
+            if _value.lower() not in frame[att]:
+                frame[att].append(_value.lower())
+    return copy.deepcopy(frame)
+
+
+""" Generate ideas from one paragraphs
+Input:
+    - data: []
+Output:
+    - [ [ideas] ]
+"""
+def preproc_ideas(data):
+    txt = []
+    id = 0
+    for text in data:
+        txt.append(generateIdeas(text, id))
+        id += 1
+    return txt
+
 
 
 """ Return the max and mean distance between idea
 """
 def analyseIdeas(listIdea):
+    if not listIdea:
+        return {'nb': 0, 'max': 0, 'mean': 0}
     d_max = -1
     d_mean = 0
     for idea in listIdea:
@@ -190,6 +212,26 @@ def analyseIdeas(listIdea):
 
 
 
+def saveIdeas(filename, ideas):
+    file = open(filename, 'w')
+    for idea in ideas:
+        s = '&&'.join([json.dumps(idea2.toSave()) for idea2 in idea])
+        file.writelines(s + '\n')
+    file.close()
+
+import copy
+def loadIdeas(filename):
+    out = [[]]
+    file = open(filename, 'r')
+    for ideas in file.readlines():
+        list_idea = ideas.split('&&')
+        new_ideas = []
+        for idea2 in list_idea:
+            decjson = json.loads(idea2)
+            new_ideas.append(Idea("").loadIdea(decjson))
+        out.append(copy.deepcopy(new_ideas))
+    file.close()
+    return out
 
 if __name__ == '__main__':
     # init_tokenizer()

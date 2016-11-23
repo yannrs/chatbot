@@ -20,14 +20,13 @@ import pickle
 import random
 import os
 
-from core_idea import *
+from variables import *
 
-path = 'C:\Users\yann\Documents\Mes fichiers\Cours\GeorgiaTech\Fall 2016\CS   7637 - Knowledge based AI\Project3\Data\\'
 ps = PorterStemmer()
 
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words('english'))
-NB_FEATURES = 30
+NB_FEATURES = 3000
 RATE_LEARNER = 0.8
 
 def loadFile(filename):
@@ -62,21 +61,6 @@ def preproc(data):
     return txt
 
 
-""" Generate ideas from one paragraphs
-Input:
-    - data: []
-Output:
-    - [ [ideas] ]
-"""
-def preproc_ideas(data):
-    txt = []
-    id = 0
-    for text in data:
-        txt.append(generateIdeas(text, id))
-        id += 1
-    return txt
-
-
 """ Merge sublist =>[[]] to []
 """
 def mergeData(data):
@@ -105,7 +89,7 @@ def readAllData():
     listFile = os.listdir(path + 'Courses')
     listFile = ['Courses\\' + name for name in listFile]
     listFile = []
-    listFile.append('gatech_wiki_clean.csv')
+    listFile.append('gatech_wiki_clean_v2.csv')
     data = []
     for file in listFile:
         data += loadFile(file)
@@ -113,102 +97,10 @@ def readAllData():
 
 
 def saveData(fileName, data):
-    file = open(path + fileName, 'w')
+    file = open(fileName, 'w')
     for d in data:
         file.writelines(str(d)+"\n")
     file.close()
-
-
-def main_preprocess():
-    ##################
-    ## Create Features
-
-    # Read all the data
-    data = readAllData()
-    print "data", len(data), data
-
-    # Clean data
-    data_cleaned = preproc(data)
-    print "data_cleaned", len(data_cleaned),  data_cleaned
-
-    # Merge data
-    data_merged = mergeData(data_cleaned)
-    print "data_merged", len(data_merged),  data_merged
-
-    # Rank words
-    all_words = nltk.FreqDist(data_merged)
-    print "all_words", len(all_words), all_words
-
-    # Extract main features
-    word_features = list(all_words.keys())[:NB_FEATURES]
-    print "word_features", len(word_features), word_features
-
-
-
-    ##################
-    ## Create Ideas
-
-    # From data collected, generate one idea for each subtext: [ ideas, ...]
-    ideas_txts = preproc_ideas(data)
-    print "ideas_txts", len(ideas_txts)#, ideas_txts
-
-
-
-    ##################
-    ## Characterized Ideas from features
-
-    # Update Ideas, by adding link to features selected
-    update_ideas(ideas_txts, word_features)
-    print "ideas_txts", len(ideas_txts)#, ideas_txts
-
-
-
-    ##################
-    ## Learning from Ideas
-
-    # Merge all set of ideas
-    ideas_merged = mergeData(ideas_txts)
-    print "ideas_merged", len(ideas_merged), ideas_merged
-
-    # Cut and shuffle data to have a good learning
-    ideas_learn = preproc_learn(ideas_merged)
-    print "ideas_learn", len(ideas_learn), ideas_learn
-
-    cut = int(len(ideas_learn)*RATE_LEARNER)
-    print "cut", cut
-    random.shuffle(ideas_learn)
-    # set that we'll train our classifier with
-    training_set = ideas_learn[:cut]
-    # set that we'll test against.
-    testing_set = ideas_learn[cut:]
-
-    # Learn overall pattern => K-mean
-    Kmeans_classifier = SklearnClassifier(KMeans(n_clusters=len(ideas_txts)))
-    Kmeans_classifier.train(training_set)
-    # print("Kmeans_classifier accuracy percent:", (nltk.classify.accuracy(Kmeans_classifier, testing_set))*100)
-
-    classifier = nltk.NaiveBayesClassifier.train(training_set)
-    print("Classifier accuracy percent:", (nltk.classify.accuracy(classifier, testing_set))*100)
-    classifier.show_most_informative_features(15)
-
-    # test_learner(training_set, testing_set)
-
-    ##################
-    ## Save the Learner
-
-    # Save the model
-    save_classifier = open("k-means_learner.pickle", "wb")
-    pickle.dump(Kmeans_classifier, save_classifier)
-    save_classifier.close()
-
-    # Save features extracted
-    saveData("save.csv", word_features)
-    saveIdeas('saveIdeas.csv', ideas_txts)
-
-    print ">>>>>>>>>>>>>>>>>>>><"
-    print "FINISH !"
-
-    return -1
 
 
 def loadClassifier(name):
@@ -219,25 +111,7 @@ def loadClassifier(name):
     return classifier
 
 
-def saveIdeas(filename, ideas):
-    file = open(filename, 'w')
-    for idea in ideas:
-        s = ';'.join([str(idea2.toSave()) for idea2 in idea])
-        file.writelines(s + '\n')
-    file.close()
-
-
-def loadIdeas(filename):
-    out = [[]]
-    file = open(filename, 'r')
-    for ideas in file.readlines():
-        list_idea = ideas.split(';')
-        new_ideas = []
-        for idea2 in list_idea:
-            new_ideas.append(Idea.loadIdea(idea2))
-        out.append(new_ideas)
-    file.close()
-    return new_ideas
+import json
 
 def test_learner(training_set, testing_set):
     MNB_classifier = SklearnClassifier(MultinomialNB())
@@ -264,7 +138,7 @@ def test_learner(training_set, testing_set):
     LinearSVC_classifier.train(training_set)
     print("LinearSVC_classifier accuracy percent:", (nltk.classify.accuracy(LinearSVC_classifier, testing_set))*100)
 
-
-
-if __name__ == '__main__':
-    main_preprocess()
+#
+#
+# if __name__ == '__main__':
+#     main_preprocess()
