@@ -1,4 +1,4 @@
-
+# coding=utf-8
 from Knowledges.preprocessing import *
 from core_idea import *
 
@@ -67,7 +67,8 @@ def main_preprocess():
 
     # Learn overall pattern => K-mean
     Kmeans_classifier = SklearnClassifier(KMeans(n_clusters=len(ideas_txts)))
-    Kmeans_classifier.train(training_set)
+    Kmeans_classifier.train(ideas_learn)
+    Kmeans_classifier
     # print("Kmeans_classifier accuracy percent:", (nltk.classify.accuracy(Kmeans_classifier, testing_set))*100)
 
     classifier = nltk.NaiveBayesClassifier.train(training_set)
@@ -80,10 +81,10 @@ def main_preprocess():
     ## Save the Learner
 
     # Save the model
-    save_classifier = open(path + "k-means_learner.pickle", "wb")
+    save_classifier = open(path + "Models\k-means_learner.pickle", "wb")
     pickle.dump(Kmeans_classifier, save_classifier)
     save_classifier.close()
-    save_classifier = open(path + "naivebayes.pickle", "wb")
+    save_classifier = open(path + "Models\\naivebayes.pickle", "wb")
     pickle.dump(classifier, save_classifier)
     save_classifier.close()
 

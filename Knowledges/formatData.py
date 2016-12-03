@@ -66,7 +66,33 @@ def cleanMoreTxt(filename):
         file.writelines(d)
     file.close()
 
+
+""" Remove ',' on big number
+"""
+def cleanMoreTxtNumber(filename):
+    file = open(path + filename, 'r')
+    dataAll = file.readlines()
+    file.close()
+    dataAll_n = []
+    for data in dataAll:
+        out = ""
+        l = data.split(',')
+        for i in l:
+            if i[0].isdigit():
+                out += i
+            elif i != l[0]:
+                out += ',' + i
+            else:
+                out += i
+        dataAll_n.append(out)
+    file = open(path+'_' + filename, 'wb')
+    for d in dataAll_n:
+        file.writelines(d)
+    file.close()
+
+
 if __name__ == '__main__':
     # applyAllFolder(path)
 
-    cleanMoreTxt('gatech_wiki_clean.csv')
+    # cleanMoreTxt('gatech_wiki_clean.csv')
+    cleanMoreTxtNumber('gatech_wiki_clean_v2.csv')

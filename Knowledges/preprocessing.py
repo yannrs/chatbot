@@ -42,8 +42,23 @@ def loadFile(filename):
 stop_words = set(stopwords.words('english'))
 
 def preproc_it(data):
-    return [lemmatizer.lemmatize(w).lower().encode('ascii', 'ignore') for w in word_tokenize(data) if not w in stop_words]
+    return [w.lower().encode('utf-8', 'ignore') for w in word_tokenize(data) if not w in stop_words]
+    # return [lemmatizer.lemmatize(w).lower().encode('ascii', 'ignore') for w in word_tokenize(data) if not w in stop_words]
 
+
+def merge_synonym(data, all=False):
+    n_data = []
+    for w in data:
+        if not ' ' in w:
+            n_w = lemmatizer.lemmatize(w)
+            if n_w not in n_data or all:
+                n_data.append(n_w)
+        else:
+            l_w = w.split(' ')
+            n_w = ' '.join(merge_synonym(l_w))
+            if n_w not in n_data or all:
+                n_data.append(n_w)
+    return n_data
 
 def preproc_tag(data):
     custom_sent_tokenizer = PunktSentenceTokenizer(data)
@@ -73,8 +88,12 @@ def mergeData(data):
 """
 def update_ideas(ideas, word_features):
     for idea in ideas:
-        for idea2 in idea:
-            idea2.add_feature(word_features)
+        if type(idea) == list:
+            for idea2 in idea:
+                idea2.add_feature(word_features)
+        else:
+            idea.add_feature(word_features)
+
 
 """ Convert ideas to something learnable
 """
@@ -89,12 +108,22 @@ def readAllData():
     listFile = os.listdir(path + 'Courses')
     listFile = ['Courses\\' + name for name in listFile]
     listFile = []
-    listFile.append('gatech_wiki_clean_v2.csv')
+    listFile.append('gatech_wiki_clean_v3.csv')
     data = []
     for file in listFile:
         data += loadFile(file)
     return data
 
+
+def readAllData_dico():
+    listFile = os.listdir(path + 'Courses')
+    listFile = ['Courses\\' + name for name in listFile]
+    # listFile = []
+    listFile.append('gatech_wiki_clean_v3.csv')
+    data = []
+    for file in listFile:
+        data.append({'name': file, 'text': loadFile(file)})
+    return data
 
 def saveData(fileName, data):
     file = open(fileName, 'w')

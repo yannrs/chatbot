@@ -1,5 +1,6 @@
 # coding=utf-8
 import nltk
+import copy
 from nltk.corpus import wordnet
 from nltk.corpus import state_union
 from nltk.corpus import stopwords
@@ -22,18 +23,29 @@ class Idea:
     def __repr__(self):
         return 'Idea: ' + str(self.id) + ' [' + str(self.frame) + ']'
 
+    """ From the text, generate a fram which will represent the idea
+    """
     def generate(self):
         # print begin
         self.frame = generateIdea(self.text)
         return self
 
+    """ For each word selected as a feature, check if the word is present into the text
+    Input:
+        - word_feature = [ w1, w2, ...]
+    Output:
+        - None
+    """
     def add_feature(self, word_features):
+        self.features = {}
         for word in word_features:
             # self.features['contains({})'.format(word)] = self.text.count(word)
             # self.features['contains({})'.format(word)] = (word in self.text)
             # key = word.encode('ascii', 'ignore')
             # if
-            self.features[word.encode('ascii', 'ignore')] = (word in self.text)
+            self.features[word] = (word in self.text)
+            # self.features[word.encode('utf-8', 'ignore')] = (word in self.text)
+
 
     def toSave(self):
         content = {}
@@ -50,6 +62,8 @@ class Idea:
         self.features = json.loads(dico['features'])
         return self
 
+    """ Try to quantify the distance between 2 ideas
+    """
     def compare(self, idea):
         out = 0
         error = ""
@@ -85,37 +99,6 @@ def select_wordnet(label):
         return 'n'
 
 
-def init_tokenizer():
-    train_text = state_union.raw("2005-GWBush.txt")
-    sample_text = state_union.raw("2006-GWBush.txt")
-    custom_sent_tokenizer = PunktSentenceTokenizer(train_text)
-    print "custom_sent_tokenizer", custom_sent_tokenizer
-    # Create String of meaning
-    tokenized = custom_sent_tokenizer.tokenize(sample_text)
-    print len(tokenized)
-    tokenized = custom_sent_tokenizer.tokenize(train_text)
-    print len(tokenized)
-    print "tokenized", tokenized
-
-    for i in tokenized:
-        # Label all string
-        words = nltk.word_tokenize(i)
-        tagged = nltk.pos_tag(words)
-        # print tagged
-        chunkGram = r"""Chunk: {<RB.?>*<VB.?>*<NNP>+<NN>?}"""
-        chunkParser = nltk.RegexpParser(chunkGram)
-        chunked = chunkParser.parse(tagged)
-        # print(chunked)
-        # for subtree in chunked.subtrees(filter=lambda t: t.label() == 'Chunk'):
-        #     print(subtree)
-
-        chunkGram = r"""Chunk: {<.*>+}
-                                }<VB.?|IN|DT|TO>+{"""
-
-        chunkParser = nltk.RegexpParser(chunkGram)
-        chunked = chunkParser.parse(tagged)
-        createFrame(tagged)
-    print attribute
 
 master_tokenizer = PunktSentenceTokenizer(state_union.raw("2005-GWBush.txt"))
 
@@ -141,7 +124,9 @@ def generateIdeas_(text):
 
     return frames_txt
 
+""" Generate a set of ideas by splitting the text into subtext
 
+"""
 def generateIdeas(text, id=0):
     # Cut sentences by meaning
     tokenized_txt = master_tokenizer.tokenize(text)
@@ -160,10 +145,9 @@ def generateIdea(text):
     tagged = nltk.pos_tag(words)
     return createFrame(tagged)
 
-import copy
 
 attribute = []
-""" Function
+""" Functionca
 """
 def createFrame(sentence, frame={}):
     for _value, att in sentence:
@@ -211,7 +195,6 @@ def analyseIdeas(listIdea):
     return {'nb': len(listIdea), 'max': d_max, 'mean': d_mean}
 
 
-
 def saveIdeas(filename, ideas):
     file = open(filename, 'w')
     for idea in ideas:
@@ -219,7 +202,7 @@ def saveIdeas(filename, ideas):
         file.writelines(s + '\n')
     file.close()
 
-import copy
+
 def loadIdeas(filename):
     out = [[]]
     file = open(filename, 'r')
@@ -239,6 +222,7 @@ if __name__ == '__main__':
     text = "﻿Other Georgia Tech-affiliated buildings in the area host the Center for Quality Growth and Regional Development, the Georgia Tech Enterprise Innovation Institute, the Advanced Technology Development Center, VentureLab, and the Georgia Electronics Design Center. Technology Square also hosts a variety of restaurants and businesses, including the headquarters of notable consulting companies like Accenture and also including the official Institute bookstore, a Barnes & Noble bookstore, and a Georgia Tech-themed Waffle House.[57][61]"
     text = text.decode('utf-8')
     id = Idea(text).generate()
+    print id
     text2 = "﻿Other Georgia Tech-affiliated house in the area host the higher for Quality Decrease and Country Development, the Georgia Tech Enterprise Innovation Institute, the Advanced Technology Development Center, VentureLab, and the Georgia Electronics Design Center. Technology Square also hosts a variety of restaurants and businesses, including the headquarters of notable consulting companies like Accenture and also including the official Institute bookstore, a Barnes & Noble bookstore, and a Georgia Tech-themed Waffle House.[57][61]"
     text2 = text2.decode('utf-8')
 

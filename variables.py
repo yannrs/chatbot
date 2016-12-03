@@ -1,4 +1,4 @@
-
+# coding=utf-8
 
 path = 'C:\Users\yann\Documents\Mes fichiers\Cours\GeorgiaTech\Fall 2016\CS   7637 - Knowledge based AI\Project3\Data\\'
 
