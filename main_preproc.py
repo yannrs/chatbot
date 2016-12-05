@@ -81,16 +81,16 @@ def main_preprocess():
     ## Save the Learner
 
     # Save the model
-    save_classifier = open(path + "Models\k-means_learner.pickle", "wb")
+    save_classifier = open(PATH + "Models\k-means_learner.pickle", "wb")
     pickle.dump(Kmeans_classifier, save_classifier)
     save_classifier.close()
-    save_classifier = open(path + "Models\\naivebayes.pickle", "wb")
+    save_classifier = open(PATH + "Models\\naivebayes.pickle", "wb")
     pickle.dump(classifier, save_classifier)
     save_classifier.close()
 
     # Save features extracted
-    saveData(path + "save.csv", word_features)
-    saveIdeas(path + 'saveIdeas.csv', ideas_txts)
+    saveData(PATH + "save.csv", word_features)
+    saveIdeas(PATH + 'saveIdeas.csv', ideas_txts)
 
     print ">>>>>>>>>>>>>>>>>>>><"
     print "FINISH !"

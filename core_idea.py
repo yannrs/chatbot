@@ -9,13 +9,17 @@ from nltk.tokenize import PunktSentenceTokenizer
 from variables import WEIGHT_SENTENCE, MAIN_ATTRIBUTE
 from Knowledges.preprocessing import *
 import json
+from scipy.sparse.linalg import norm
 
 class Idea:
-    def __init__(self, text, id=-1):
+    def __init__(self, text="", id=-1):
         self.id = id
+        self.label = id
         self.text = text            # ''
         self.frame = {}             # {'NP':[ 'Charles', ....], 'VB': [...] }
         self.features = {}          # {'word1': 1, 'word2':0, 'word3': 10, .... }
+        self.features_vect = []     # count from a main vectorizer
+        self.vectorizer = -1
 
     def __str__(self):
         return 'Idea: ' + str(self.frame)
@@ -26,7 +30,6 @@ class Idea:
     """ From the text, generate a fram which will represent the idea
     """
     def generate(self):
-        # print begin
         self.frame = generateIdea(self.text)
         return self
 
@@ -46,6 +49,10 @@ class Idea:
             self.features[word] = (word in self.text)
             # self.features[word.encode('utf-8', 'ignore')] = (word in self.text)
 
+    def add_features_vect(self, vectorizer):
+        self.features_vect = vectorizer.transform([self.text])
+        self.vectorizer = vectorizer
+        return self
 
     def toSave(self):
         content = {}
@@ -53,13 +60,16 @@ class Idea:
         content['text'] = self.text
         content['frame'] = json.dumps(self.frame)
         content['features'] = json.dumps(self.features)
+        # content['feature_vect'] = json.dumps(self.features_vect)
         return content
 
     def loadIdea(self, dico):
         self.id = dico['id']
+        self.label = dico['id']
         self.text = dico['text']
         self.frame = json.loads(dico['frame'])
         self.features = json.loads(dico['features'])
+        # self.features_vect = json.loads(dico['feature_vect'])
         return self
 
     """ Try to quantify the distance between 2 ideas
@@ -86,10 +96,11 @@ class Idea:
                     except:
                         mean_all_label = 0
                 out += WEIGHT_SENTENCE.get(label, WEIGHT_SENTENCE['DEFAULT']) * mean_all_label / float(len(self.frame.get(label, [''])))
-        print "error", error
+        print "Idea.compare : error:", error
         return out
 
-
+    def compare_v2(self, idea):
+        return norm(idea.features_vect - self.features_vect)
 
 
 def select_wordnet(label):
@@ -133,9 +144,11 @@ def generateIdeas(text, id=0):
 
     # Label content
     ideas = []
-    id = id
+    id_ = str(id) + '_'
+    i = 0
     for token in tokenized_txt:
-        ideas.append(Idea(token, id).generate())
+        ideas.append(Idea(token, id_ + str(i)).generate())
+        i += 1
 
     return ideas
 
@@ -176,6 +189,27 @@ def preproc_ideas(data):
     return txt
 
 
+""" Update all objects ideas with feature selected
+"""
+def update_ideas(ideas, word_features):
+    for idea in ideas:
+        if type(idea) == list:
+            for idea2 in idea:
+                idea2.add_feature(word_features)
+        else:
+            idea.add_feature(word_features)
+
+
+""" Update all objects ideas by generating feature from a vectorizer
+"""
+def update_ideas_v2(ideas, word_features):
+    for idea in ideas:
+        if type(idea) == list:
+            for idea2 in idea:
+                idea2.add_features_vect(word_features)
+        else:
+            idea.add_features_vect(word_features)
+
 
 """ Return the max and mean distance between idea
 """
@@ -187,7 +221,7 @@ def analyseIdeas(listIdea):
     for idea in listIdea:
         for idea2 in listIdea:
             if idea is not idea2:
-                d = idea.compare(idea2)
+                d = idea.compare_v2(idea2)
                 d_mean += d
                 if d_max < d:
                     d_max = d
@@ -201,6 +235,7 @@ def saveIdeas(filename, ideas):
         s = '&&'.join([json.dumps(idea2.toSave()) for idea2 in idea])
         file.writelines(s + '\n')
     file.close()
+
 
 
 def loadIdeas(filename):

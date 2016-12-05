@@ -30,7 +30,7 @@ NB_FEATURES = 3000
 RATE_LEARNER = 0.8
 
 def loadFile(filename):
-    file = open(path+filename, 'r')
+    file = open(PATH+filename, 'r')
     text = [line[:-2].decode('utf-8') for line in file.readlines()]
     file.close()
     return text
@@ -84,16 +84,6 @@ def mergeData(data):
         n_data += d
     return n_data
 
-""" Update all objects ideas with feature selected
-"""
-def update_ideas(ideas, word_features):
-    for idea in ideas:
-        if type(idea) == list:
-            for idea2 in idea:
-                idea2.add_feature(word_features)
-        else:
-            idea.add_feature(word_features)
-
 
 """ Convert ideas to something learnable
 """
@@ -105,7 +95,7 @@ def preproc_learn(ideas):
 
 
 def readAllData():
-    listFile = os.listdir(path + 'Courses')
+    listFile = os.listdir(PATH + 'Courses')
     listFile = ['Courses\\' + name for name in listFile]
     listFile = []
     listFile.append('gatech_wiki_clean_v3.csv')
@@ -116,7 +106,7 @@ def readAllData():
 
 
 def readAllData_dico():
-    listFile = os.listdir(path + 'Courses')
+    listFile = os.listdir(PATH + 'Courses')
     listFile = ['Courses\\' + name for name in listFile]
     # listFile = []
     listFile.append('gatech_wiki_clean_v3.csv')
@@ -167,6 +157,7 @@ def test_learner(training_set, testing_set):
     LinearSVC_classifier.train(training_set)
     print("LinearSVC_classifier accuracy percent:", (nltk.classify.accuracy(LinearSVC_classifier, testing_set))*100)
 
+    LinearSVC_classifier.p
 #
 #
 # if __name__ == '__main__':

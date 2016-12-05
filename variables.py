@@ -1,12 +1,32 @@
 # coding=utf-8
 
-path = 'C:\Users\yann\Documents\Mes fichiers\Cours\GeorgiaTech\Fall 2016\CS   7637 - Knowledge based AI\Project3\Data\\'
+
+PATH = 'C:\Users\yann\Documents\Mes fichiers\Cours\GeorgiaTech\Fall 2016\CS   7637 - Knowledge based AI\Project3\Data\\'
 
 SLACK_BOT_TOKEN = 'xoxb-100786786962-4QVO6gqENojSxqAAPr6jZw6k'
 
 BOT_ID = 'U2YP4P4UA'
 BOT_NAME = 'alexa'
+READ_WEBSOCKET_DELAY = 1    # 1 second delay between reading from firehose
 
+
+NAME_CLASSIFIERS = [
+    "kNN",
+    "Random forest",
+    "MultinomialNB",
+    "BernoulliNB"]
+
+NAME_CLASSIFIERS2 = [
+    "Ridge Classifier",
+    "Perceptron",
+    "Passive-Aggressive",
+    "kNN",
+    "Random forest",
+    "MultinomialNB",
+    "BernoulliNB",
+    "NearestCentroid"]
+
+SAVED_CONCEPTS = 'knowledge_concept.csv'
 
 MAIN_ATTRIBUTE = ['NNP']#, 'NNS', 'JJ', 'NN', 'VBG', 'VBN', 'VBP', 'VBZ' ]
 

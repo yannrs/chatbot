@@ -8,12 +8,12 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn import metrics
 
+from time import time
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
 import logging
 from optparse import OptionParser
 import sys
-from time import time
 
 import numpy as np
 
@@ -80,6 +80,19 @@ else:
                                  min_df=2, stop_words='english',
                                  use_idf=opts['use_idf'])
 X = vectorizer.fit_transform(dataset)
+
+print "<<<<<<<<<<<<<<<<<<<<<<<<<>"
+print X.shape
+print X
+print '-----------'
+print X[0][0]
+print '-----------'
+print X[0,1]
+print "<<<<<<<<<<<<<<<<<<<<<<<<<>"
+
+a = vectorizer.inverse_transform(X)
+print type(a)
+print a
 
 print("done in %fs" % (time() - t0))
 print("n_samples: %d, n_features: %d" % X.shape)

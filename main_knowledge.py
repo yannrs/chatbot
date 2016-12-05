@@ -1,14 +1,24 @@
 # coding=utf-8
-from core_concept import *
+from core_concept import Concept, MAX_FEATURES
 from Knowledges.preprocessing import *
-from sklearn.linear_model import Perceptron
-from sklearn.linear_model import PassiveAggressiveClassifier
-from sklearn.naive_bayes import BernoulliNB, MultinomialNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neighbors import NearestCentroid
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import RidgeClassifier
+from classifier_select import train_classifier, save_knowledge_models, save_knowledge_generic, load_knowledge_topics
+from classifier_select import save_knowledge_topics
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans, MiniBatchKMeans
 
+from time import time
+
+
+MODE = 2
+SAVE_KNOWLEDGE = 1
+
+
+""" From files create the knowledge which will be used by the bot
+Input:
+    - None
+Output:
+    - [ {'name': , 'concept':[ concept, ...]}, ... ]
+"""
 def create_knowledge():
 
     ## Read Data -> list of text
@@ -23,20 +33,25 @@ def create_knowledge():
 
     ###########################
     ### General analysis
-    models, X, y = exploit_txt_ap3(data)
+    models, vectorizer, X, y, label_y = exploit_txt_ap3(data)
 
     ## Save model
     save_knowledge_models(models)
+    save_knowledge_generic(vectorizer, 'vectorizer')
 
 
     ###########################
     ### Local analysis
-    concepts = exploit_txt_ap2(data)
-    print concepts
+    if MODE == SAVE_KNOWLEDGE:
+        topics = exploit_txt_ap2(data, X, label_y)
+        print topics
 
+        save_knowledge_topics(SAVED_CONCEPTS, topics)
+    else:
+        topics = exploit_txt_ap2_wt_load(SAVED_CONCEPTS)
+        print topics
 
-
-    return -1
+    return topics
 
 
 def classify_concept(topics):
@@ -94,7 +109,7 @@ Input:
 Ouput:
     - [{'name': String, 'concept': [concept]}, ...]
 """
-def exploit_txt_ap2(data):
+def exploit_txt_ap2(data, X, label_y):
     ### For each file
     # Create a concept from the file:
     #   -> Find ideas
@@ -104,18 +119,31 @@ def exploit_txt_ap2(data):
 
     topics = []
 
+    index = 0
     for file in data:
         topic = {'name': file['name'], 'concept': []}
         line = ' '.join(file['text'])
         if len(line) > 2:
-            c = Concept(line, file['name'])
+            c = Concept(line, label_y[file['name']], X[index:(index+len(file['text']))])
             c.generate()
+            index += len(file['text'])
 
             topic['concept'].append(c)
         topics.append(topic)
+        # if index > 0:
+        #     break
 
     return topics
 
+
+def exploit_txt_ap2_wt_load(filename):
+    topics = load_knowledge_topics(filename)
+
+    for concepts in topics:
+        for concept in concepts['concept']:
+            concept.generate_partial()
+
+    return topics
 
 ### Approach 3
 ## Analyse everything as one file
@@ -139,7 +167,6 @@ def exploit_txt_ap3(data):
         text_y += [file['name'] for i in xrange(len(file['text']))]
         text_svm += [(file['name'], line) for line in file['text']]
 
-
     vectorizer = TfidfVectorizer(max_df=0.5, max_features=MAX_FEATURES,
                                  min_df=2, stop_words='english',
                                  ngram_range=(1, 2), lowercase=True,
@@ -148,6 +175,11 @@ def exploit_txt_ap3(data):
     # print len(n_txt), len(self.text)
     X = vectorizer.fit_transform(text)
     print X.shape
+
+    ## Test
+    print vectorizer.get_feature_names()
+    print len(vectorizer.get_feature_names())
+
     # svd = TruncatedSVD(8)
     # normalizer = Normalizer(copy=False)
     # lsa = make_pipeline(svd, normalizer)
@@ -187,42 +219,9 @@ def exploit_txt_ap3(data):
 
     results = train_classifier(X, training_y)
 
-    return results, X, training_y
+    save_knowledge_generic(vectorizer, 'vectorizer')
 
-
-
-def train_classifier(X, y):
-    results = []
-    for clf, name in (
-                    (RidgeClassifier(tol=1e-2, solver="lsqr"), "Ridge Classifier"),
-                    (Perceptron(n_iter=50), "Perceptron"),
-                    (PassiveAggressiveClassifier(n_iter=50), "Passive-Aggressive"),
-                    (KNeighborsClassifier(n_neighbors=10), "kNN"),
-                    (RandomForestClassifier(n_estimators=100), "Random forest"),
-                    (MultinomialNB(alpha=.01), "MultinomialNB"),
-                    (BernoulliNB(alpha=.01), "BernoulliNB"),
-                    (NearestCentroid(), "NearestCentroid")):
-        print('=' * 80)
-        print(name)
-        clf.fit(X, y)
-        results.append((clf, name))
-
-        t0 = time()
-        pred = clf.predict(X)
-        test_time = time() - t0
-        print("test time:  %0.3fs" % test_time)
-
-        score = metrics.accuracy_score(y, pred)
-        print("accuracy:   %0.3f" % score)
-
-    return results
-
-
-def save_knowledge_models(models):
-    for model, name in models:
-        save_classifier = open(path + "Models\\"+name+".pickle", "wb")
-        pickle.dump(model, save_classifier)
-        save_classifier.close()
+    return results, vectorizer, X, training_y, label_y
 
 
 

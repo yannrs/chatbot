@@ -9,7 +9,8 @@ from slackclient import SlackClient
 # from Knowledges.preprocessing import *
 from core_idea import *
 from variables import *
-
+from classifier_select import general_kw_predict, load_knowledge, VECTORIZER
+from main_knowledge import create_knowledge
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 AT_CHANNEL_BOT = "D2Y397HBK"
@@ -25,9 +26,8 @@ THRESHOLD_NB = 50
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(SLACK_BOT_TOKEN)
-Classifier_topic = loadClassifier(path + "naivebayes.pickle")
-knowledge_idea = loadIdeas(path + 'saveIdeas.csv')
-
+Classifier_topic = loadClassifier(PATH + "naivebayes.pickle")
+knowledge_idea = create_knowledge() #loadIdeas(PATH + 'saveIdeas.csv')
 
 """ From the text sent by a Human, this function converts sentences to ideas, and add the mood as an extra feature
 Input:
@@ -39,8 +39,8 @@ def parse_bot_input(bot_input):
     ideas = []
     mood = -1
 
-    for part in bot_input:
-        ideas.append(Idea(part).generate())
+    ideas = generateIdeas(bot_input)
+    ideas = [idea.add_features_vect(VECTORIZER) for idea in ideas]
 
     return ideas, mood
 
@@ -52,23 +52,15 @@ Output:
     - [ ideas ]
     - status = IDEA_NEW or IDEA_TOO_WIDE or IDEA_TOO_FAR
 """
-def get_new_ideas(ideas):
+def get_new_ideas(knowledge_user):
     idea_new = []
     status = IDEA_NEW
 
-    # Get all labels
-    idea_label = []
-    for idea in ideas:
-        idea_label.append(Classifier_topic.classify(idea.features))
-    print "idea_label", idea_label
+    # Get all potentials concepts:
+    concepts = get_concepts(knowledge_user)
 
-    # Get the right idea linked
-    for k in knowledge_idea:
-        for k_sub in k:
-            if k_sub.id in idea_label:
-                print k_sub
-                idea_new.append(k_sub)
-    print 'idea_new', len(idea_new)
+    # From concept found, get potential useful ideas
+    idea_new = get_ideas(concepts, knowledge_user)
 
     # Check the wide & the number of idea found
     stats = analyseIdeas(idea_new)
@@ -85,6 +77,51 @@ def get_new_ideas(ideas):
     return idea_new, status
 
 
+def get_concepts(knowledge_user):
+    concept_new = []
+
+    # Get Label of potential useful concept
+    concept_label = []
+    for idea in knowledge_user:
+        concept_label.append(str(general_kw_predict(idea.features_vect)))
+    print "concept_label", concept_label
+    # concept_label = [str(k) for k in concept_label]
+
+    # Get Concepts from label found
+    for k in knowledge_idea:
+        for k_sub in k["concept"]:
+            print k_sub.label
+            if k_sub.label in concept_label:
+                print k_sub
+                concept_new.append(k_sub)
+    print 'concept_new', len(concept_new)
+    return concept_new
+
+
+def get_ideas(concepts, knowlegde_user):
+    idea_new_all = []
+    for concept in concepts:
+        idea_label = []
+        idea_new = []
+        # For each concept found try to predict which idea found be useful
+        for idea in knowlegde_user:
+            idea_label_n = concept.predict_idea(idea)
+            print idea_label_n
+            idea_label.append(copy.deepcopy(idea_label_n[0]))
+        print "idea_label", len(idea_label), idea_label
+
+        # Get the ideas from labels found
+        for i in range(0, len(concept.ideas)):
+            if concept.idea_model_label[i] in idea_label:
+                idea_new.append(concept.ideas[i])
+        print 'idea_new', len(idea_new)
+
+        idea_new_all += copy.deepcopy(idea_new)
+
+    print 'idea_new_all', len(idea_new_all)
+    return idea_new_all
+
+
 """ From ideas and the mood of the user, generate an answer or a new say
 Input:
     - ideas: [ideas]
@@ -97,7 +134,7 @@ def generate_bot_answer(ideas, mood):
 
     # First try: just concat key feature
     for idea in ideas:
-        out += ';'.join(set([k for k in idea.features if idea.features[k]]))
+        out += ';'.join(list(idea.vectorizer.inverse_transform(idea.features_vect)[0]))
 
     return out
 
@@ -131,7 +168,7 @@ def one_iteration(track_idea):
                 answer = ""
                 if status == IDEA_NEW:
                     # We found something to say
-                     answer = generate_bot_answer(ideas, mood)
+                     answer = generate_bot_answer(new_ideas, mood)
 
                 elif status == IDEA_TOO_WIDE:
                     # The user have to select a more specific subject
@@ -140,6 +177,10 @@ def one_iteration(track_idea):
                 elif status == IDEA_TOO_FAR:
                     # Ask to focus on the right topic
                      answer = "Sorry could we come back to a Georgia tech related topic ?"
+
+                else:
+                    # We don't understand the request or the saying of the person
+                    answer = "Sorry I don't understand what you said."
 
                 send_answer(answer, output['channel'])
 
@@ -176,8 +217,14 @@ def test_main(txt):
     return answer
 
 
+def initialization_step():
+    print 'Initialization'
+    load_knowledge()
+    print 'Ready to begin'
+
+
 def main_slack():
-    READ_WEBSOCKET_DELAY = 1    # 1 second delay between reading from firehose
+    initialization_step()
     if slack_client.rtm_connect():
         print("StarterBot connected and running!")
         track_idea = {}
@@ -189,4 +236,5 @@ def main_slack():
 
 
 if __name__ == '__main__':
+    initialization_step()
     test_main(['georgia tech is the best'])
