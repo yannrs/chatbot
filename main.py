@@ -1,10 +1,10 @@
-
+# coding=utf-8
 ## Libraries to Import to run the project
 from slack import main_slack
 
 
 def main():
-    print 'test'
+    print 'Begin'
 
 
 if __name__ == '__main__':

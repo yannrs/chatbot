@@ -87,7 +87,7 @@ print X
 print '-----------'
 print X[0][0]
 print '-----------'
-print X[0,1]
+print X[0, 1]
 print "<<<<<<<<<<<<<<<<<<<<<<<<<>"
 
 a = vectorizer.inverse_transform(X)

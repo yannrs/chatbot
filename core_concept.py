@@ -16,9 +16,12 @@ from sklearn import metrics
 import numpy as np
 from scipy.sparse import hstack, vstack
 
-
 from time import time
 MAX_FEATURES = 10000
+
+
+#################################################
+###       Main Class: CONCEPT
 class Concept:
     def __init__(self, txt="", label="", features=[]):
         self.ideas = []     # Ideas used to describe the concept, and to train the model
@@ -40,7 +43,7 @@ class Concept:
     def __repr__(self):
         return str(self.label) + ' - Nb ideas:' + str(len(self.ideas)) + ' ; Nb features:' + str(len(self.idea_feature_word))
 
-    """ Convert ideas to something learnable
+    """ Convert Concept to something learnable
     """
     def get_data_to_learn(self):
         return self.label, self.feature_concept
@@ -55,27 +58,24 @@ class Concept:
         print("generate_local_features  done in %0.3fs" % (time() - t0))
         t0 = time()
         self.ideas = generateIdeas(self.text, self.label)
-
-        # Update Ideas, by adding link to features selected
-        # update_ideas(self.ideas, self.idea_feature_word)
-        print("generate  done in %0.3fs" % (time() - t0))
+        print("generateIdeas done in %0.3fs" % (time() - t0))
         t0 = time()
-        update_ideas_v2(self.ideas, self.idea_vectorizer)
 
+        ## Update Ideas, by adding link to features selected
+        # update_ideas(self.ideas, self.idea_feature_word)
+        update_ideas_v2(self.ideas, self.idea_vectorizer)
         # a = merge_synonym(self.feature_idea)
 
         self.generate_model_ideas()
 
         print("Update done in %0.3fs" % (time() - t0))
-        return -1
-
+        return self
 
     def generate_partial(self):
         t0 = time()
         self.generate_local_features()
         update_ideas_v2(self.ideas, self.idea_vectorizer)
         self.generate_model_ideas()
-
 
     def generate_local_features(self):
         # t0 = time()
@@ -164,6 +164,9 @@ class Concept:
         # self.idea_vectorizer = json.loads(dico['vectorizer'])
         return self
 
+
+#################################################
+###       Learning functions
 """ Train a Kmean from a set of ideas
 Input:
     - X: scipy.sparse.csr_matrix
@@ -171,7 +174,7 @@ Output:
     - sklearnModel: MiniBatchKMeans
 """
 def train_cluster(X):
-    true_k = int(X.shape[0]*0.95)
+    true_k = int(X.shape[0]*0.5)
     print true_k
     print 'X', type(X), X.shape
     km = MiniBatchKMeans(n_clusters=true_k, init='k-means++', n_init=1,
@@ -203,6 +206,11 @@ Output:
 """
 def select_cluster(model, X):
     return model.predict(X)
+
+
+
+############################################################
+###       Test
 
 if __name__ == '__main__':
     text = "﻿Other Georgia Tech-affiliated buildings in the area host the Center for Quality Growth and Regional Development, the Georgia Tech Enterprise Innovation Institute, the Advanced Technology Development Center, VentureLab, and the Georgia Electronics Design Center. Technology Square also hosts a variety of restaurants and businesses, including the headquarters of notable consulting companies like Accenture and also including the official Institute bookstore, a Barnes & Noble bookstore, and a Georgia Tech-themed Waffle House."

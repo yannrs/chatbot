@@ -11,6 +11,12 @@ from Knowledges.preprocessing import *
 import json
 from scipy.sparse.linalg import norm
 
+# master_tokenizer = PunktSentenceTokenizer(state_union.raw("2005-GWBush.txt"))
+master_tokenizer = PunktSentenceTokenizer(state_union.raw(PATH+"gatech_wiki_clean_v3.csv"))
+
+
+#################################################
+###       Main Class: IDEA
 class Idea:
     def __init__(self, text="", id=-1):
         self.id = id
@@ -25,7 +31,7 @@ class Idea:
         return 'Idea: ' + str(self.frame)
 
     def __repr__(self):
-        return 'Idea: ' + str(self.id) + ' [' + str(self.frame) + ']'
+        return 'Idea: ' + str(self.id) + '; text:' + self.text + ' [' + str(self.frame) + ']'
 
     """ From the text, generate a fram which will represent the idea
     """
@@ -102,41 +108,22 @@ class Idea:
     def compare_v2(self, idea):
         return norm(idea.features_vect - self.features_vect)
 
+    """ Reduce the number word on the frame, by using synonym
+    """
+    def reduction_frame(self):
+        for k in self.frame:
+            self.frame[k] = merge_synonym(self.frame[k])
+        return self
 
-def select_wordnet(label):
-    if label in ['VBP', 'VBD', 'VBD', 'VB']:
-        return 'v'
-    elif label in ['NNP', 'NNS', 'NN', 'NNPS']:
-        return 'n'
 
-
-
-master_tokenizer = PunktSentenceTokenizer(state_union.raw("2005-GWBush.txt"))
-
-""" From a text, the function generate frames of common sens
+#################################################
+###       For the creation and update of an Idea
+""" Generate a set of ideas by splitting the text into subtext
 Input:
     - text: String
+    - id: Int/String; will be the base of label used for Ideas generated
 Output:
-    - [ frame={ 'DT', 'VB':, ...}, ... ]
-"""
-def generateIdeas_(text):
-    # Cut sentences by meaning
-    tokenized_txt = master_tokenizer.tokenize(text)
-
-    # Label content
-    labeled_txt = []
-    frames_txt = []
-    for token in tokenized_txt:
-        # words = nltk.word_tokenize(token)
-        words = preproc_it(token)
-        tagged = nltk.pos_tag(words)
-        labeled_txt.append(tagged)
-        frames_txt.append(createFrame(tagged))
-
-    return frames_txt
-
-""" Generate a set of ideas by splitting the text into subtext
-
+    - [ Idea, ... ]
 """
 def generateIdeas(text, id=0):
     # Cut sentences by meaning
@@ -148,24 +135,35 @@ def generateIdeas(text, id=0):
     i = 0
     for token in tokenized_txt:
         ideas.append(Idea(token, id_ + str(i)).generate())
+        if token != ideas[-1].text:
+            print "-------------------- !!!!!!!!!!"
         i += 1
 
     return ideas
 
 
+""" Preprocess the text and then generate frame from it
+Input:
+    - text: String
+Output:
+    - { 'VB': ['run', ...], ... }
+"""
 def generateIdea(text):
     words = preproc_it(text)
     tagged = nltk.pos_tag(words)
     return createFrame(tagged)
 
 
-attribute = []
-""" Functionca
+""" Aggregate common tags together on a dico
+Input:
+    - sentence: [ ('run','VB'), ...]
+    - frame: {}
+Output:
+    - { 'VB': ['run', ...], ... }
 """
-def createFrame(sentence, frame={}):
+def createFrame(sentence):
+    frame = {}
     for _value, att in sentence:
-        if att not in attribute:
-            attribute.append(att)
         if att not in frame:
             frame[att] = [_value.lower()]
         else:
@@ -211,7 +209,11 @@ def update_ideas_v2(ideas, word_features):
             idea.add_features_vect(word_features)
 
 
-""" Return the max and mean distance between idea
+""" Return the max and mean distance between ideas
+Input:
+    - listIdea: [Idea]
+Output:
+    - {'nb': 0, 'max': 0, 'mean': 0}
 """
 def analyseIdeas(listIdea):
     if not listIdea:
@@ -225,9 +227,23 @@ def analyseIdeas(listIdea):
                 d_mean += d
                 if d_max < d:
                     d_max = d
-    d_mean /= 2*len(listIdea)
+    d_mean /= len(listIdea)**2
     return {'nb': len(listIdea), 'max': d_max, 'mean': d_mean}
 
+
+
+#################################################
+###       Useful functions
+def select_wordnet(label):
+    if label in ['VBP', 'VBD', 'VBD', 'VB']:
+        return 'v'
+    elif label in ['NNP', 'NNS', 'NN', 'NNPS']:
+        return 'n'
+
+
+
+#################################################
+###       Import/Export Ideas
 
 def saveIdeas(filename, ideas):
     file = open(filename, 'w')
@@ -235,7 +251,6 @@ def saveIdeas(filename, ideas):
         s = '&&'.join([json.dumps(idea2.toSave()) for idea2 in idea])
         file.writelines(s + '\n')
     file.close()
-
 
 
 def loadIdeas(filename):
@@ -250,6 +265,34 @@ def loadIdeas(filename):
         out.append(copy.deepcopy(new_ideas))
     file.close()
     return out
+
+
+
+############################################################
+###       Test
+
+""" From a text, the function generate frames of common sens
+Input:
+    - text: String
+Output:
+    - [ frame={ 'DT', 'VB':, ...}, ... ]
+"""
+def generateIdeas_(text):
+    # Cut sentences by meaning
+    tokenized_txt = master_tokenizer.tokenize(text)
+
+    # Label content
+    labeled_txt = []
+    frames_txt = []
+    for token in tokenized_txt:
+        # words = nltk.word_tokenize(token)
+        words = preproc_it(token)
+        tagged = nltk.pos_tag(words)
+        labeled_txt.append(tagged)
+        frames_txt.append(createFrame(tagged))
+
+    return frames_txt
+
 
 if __name__ == '__main__':
     # init_tokenizer()

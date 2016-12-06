@@ -10,6 +10,21 @@ BOT_NAME = 'alexa'
 READ_WEBSOCKET_DELAY = 1    # 1 second delay between reading from firehose
 
 
+# Intelligence variables
+# Selection of the right type of input
+
+# When generating from knowledge
+IDEA_NEW = 0
+IDEA_TOO_WIDE = 1
+IDEA_TOO_FAR = 2
+IDEA_NO = 3
+
+THRESHOLD_DISP = 5
+THRESHOLD_NB = 50
+
+
+
+
 NAME_CLASSIFIERS = [
     "kNN",
     "Random forest",
@@ -52,7 +67,6 @@ WEIGHT_SENTENCE =   {'NNP': 1,
                      '(': 1,
                      ')': 1,
                      'RB': 1,
-                     'VBD': 1,
                      'PRP$': 1,
                      'TO': 1,
                      'VBG': 1,
