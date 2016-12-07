@@ -144,7 +144,7 @@ def saveData(fileName, data):
         file.writelines(str(d)+"\n")
     file.close()
 
-SEPARATOR = ','
+SEPARATOR = ';'
 def saveData_dico(fileName, data):
     file = open(fileName, 'w')
     file.writelines(SEPARATOR.join(data[0].keys())+"\n")

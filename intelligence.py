@@ -20,7 +20,7 @@ QUESTION_WORDS = ['What', 'When', 'Why', 'Which', 'Who', 'How', 'Whose', 'Whom']
 
 # Source: http://www.phrasemix.com/collections/15-ways-to-say-goodbye-in-english
 CLOSING_WORDS = ['Goodbye', 'Farewell', 'Have a good day', 'Take care',
-                 'Bye!', 'Bye bye!', 'Later!', 'See you later.', 'Talk to you later',
+                 'Bye', 'Bye bye', 'Later!', 'See you later.', 'Talk to you later',
                  'Have a good one', 'So long', 'All right then', 'Catch you later',
                  'Peace!', 'Peace out', 'I\'m out!', 'Smell you later', 'Adios',
                  'Ciao!', 'Au revoir.', 'Sayonara!']
@@ -31,6 +31,13 @@ knowledge_idea = create_knowledge()
 #################################################
 ###       Main Functions
 
+""" From ideas, and the mood provided by the user, build the more appropriate answer
+Input:
+    - ideas = [ idea ]
+    - mood = UNKNWON
+Output:
+    - String
+"""
 def bot_intelligence(ideas, mood):
     # select type answer
     type = select_type_input(ideas)
@@ -41,6 +48,12 @@ def bot_intelligence(ideas, mood):
     return answer
 
 
+""" From the user input, generate an answer
+Input:
+    - user_ideas: [ideas]
+Output:
+    - String
+"""
 def generate_answer(user_ideas):
     answer = ''
 
@@ -66,6 +79,12 @@ def generate_answer(user_ideas):
     return answer
 
 
+""" Select the right behavior to have according the user input
+Input:
+    - user_text: String
+Output:
+    - SENTENCE_OPENING, SENTENCE_QUESTION, SENTENCE_CLOSE or SENTENCE_CLAIM
+"""
 def select_type_input(user_text):
     # Check if it's an opening sentence for a new discussion
     for key_word in OPEN_WORDS:
@@ -90,6 +109,12 @@ def select_type_input(user_text):
 #################################################
 ###       Reasonning from user's input
 
+""" From the knowledge created during the preprocessing stage, create an answer
+Input:
+    - ideas = [idea]
+Output:
+    - String
+"""
 def answer_from_knowledge(ideas):
     # Check for near idea
     new_ideas, status = get_new_ideas(ideas)
@@ -119,7 +144,7 @@ def answer_from_knowledge(ideas):
     return answer
 
 
-""" Try to find near ideas or answer to one question
+""" Try to find related ideas in the aim of answering to one question
 Input:
     - ideas: [ideas]
 Output:
@@ -151,6 +176,12 @@ def get_new_ideas(knowledge_user):
     return idea_new, status
 
 
+""" From the input provided by the user, select first big concept which can fit
+Input:
+    - knowledge_user = [idea]
+Output:
+    - [concept]
+"""
 def get_concepts(knowledge_user):
     concept_new = []
 
@@ -171,16 +202,22 @@ def get_concepts(knowledge_user):
     return concept_new
 
 
+""" As a second step, from Concepts found, try to focus on ideas
+Input:
+    - knowledge_user = [idea]
+Output:
+    - [concept]
+"""
 def get_ideas(concepts, knowlegde_user):
     idea_new_all = []
     for concept in concepts:
         idea_label = []
         idea_new = []
+
         # For each concept found try to predict which idea will be useful
         for idea in knowlegde_user:
-            idea_label_n = concept.predict_idea(idea)
-            print idea_label_n
-            idea_label.append(copy.deepcopy(idea_label_n[0]))
+            idea_label.append(concept.predict_idea(idea))
+
         print "idea_label", len(idea_label), idea_label
 
         # Get the ideas from labels found
@@ -193,6 +230,35 @@ def get_ideas(concepts, knowlegde_user):
 
     print 'idea_new_all', len(idea_new_all)
     return idea_new_all
+
+
+# 2nd Approach: Get Ideas from the pool of one concept
+def find_idea(concepts, knowlegde_user):
+    idea_new_all = []
+    for concept in concepts:
+        idea_label = []
+        idea_new = []
+
+        # For each concept found try to predict which idea will be useful
+        for idea in knowlegde_user:
+            idea_label.append(concept.predict_knn(idea.features_vect))
+        print "idea_label", len(idea_label), idea_label
+
+        # Get the ideas from labels found
+        for i in range(0, len(idea_label)):
+            for j in range(0, len(idea_label[i])):
+                if concept.ideas[j] not in idea_new:
+                    idea_new.append(concept.ideas[j])
+        print 'idea_new', len(idea_new)
+
+        idea_new_all += copy.deepcopy(idea_new)
+
+    print 'idea_new_all', len(idea_new_all)
+    return idea_new_all
+
+# 3d Approach: get Idea from the overall pool
+def find_idea_all(knowledge_user):
+    print ''
 
 
 

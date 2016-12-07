@@ -16,6 +16,7 @@ from sklearn import metrics
 import numpy as np
 from scipy.sparse import hstack, vstack
 
+from util import plot_knowledge
 from time import time
 MAX_FEATURES = 10000
 
@@ -123,6 +124,8 @@ class Concept:
         self.model = train_cluster(training_set)
         self.idea_model_label = self.model.labels_
 
+        # plot_knowledge(training_set, [1 for k in xrange(len(self.ideas))])
+
     """ From an external idea, select the set of idea which are the closest
     Input:
         - idea_user: Idea
@@ -206,7 +209,6 @@ Output:
 """
 def select_cluster(model, X):
     return model.predict(X)
-
 
 
 ############################################################

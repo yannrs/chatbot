@@ -1,6 +1,8 @@
 # coding=utf-8
 from core_idea import Idea
 
+"""
+"""
 def aggregate_key_words(ideas):
     answer = ''
     for idea in ideas:
@@ -48,7 +50,6 @@ def merge_idea(ideas):
 
 
     return idea
-
 
 
 def idea_to_sentence(idea):

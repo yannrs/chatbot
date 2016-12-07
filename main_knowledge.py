@@ -6,16 +6,7 @@ from classifier_select import save_knowledge_topics
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
-from time import time
-import numpy as np
-import matplotlib.pyplot as plt
-
-from sklearn import metrics
-from sklearn.cluster import KMeans
-from sklearn.datasets import load_digits
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import scale
-
+from util import plot_knowledge
 from time import time
 import copy
 
@@ -48,7 +39,7 @@ def create_knowledge():
     ###########################
     ### General analysis
     models, vectorizer, X, y, label_y = exploit_txt_ap3(data)
-
+    plot_knowledge(X, label_y)
     ### Local analysis
     if MODE == SAVE_KNOWLEDGE:
         topics = exploit_txt_ap2(data, X, label_y)
@@ -61,6 +52,8 @@ def create_knowledge():
         map_knowledge(topics)
     else:
         topics = exploit_txt_ap2_wt_load(SAVED_CONCEPTS)
+        map_knowledge(topics)
+
         print topics
 
 
@@ -177,6 +170,7 @@ def exploit_txt_ap3(data):
     # n_txt = ' '.join(merge_synonym(text.split(' '), True))
     # X = vectorizer.fit_transform(n_txt)
     print 'X.shape', X.shape
+    # plot_knowledge(X, [1 for k in xrange(26)], "All")
 
     ## Dimensional reduction
     # svd = TruncatedSVD(8)
@@ -245,7 +239,11 @@ def map_knowledge(topics):
         attibute_concept['length_text_idea_mean'] = 0
         attibute_concept['length_text_idea_min'] = len(concept.ideas[0].text)
         attibute_concept['length_text_idea_max'] = len(concept.ideas[0].text)
+        attibute_concept['nb_text_idea_word_mean'] = 0
+        attibute_concept['nb_text_idea_word_min'] = concept.ideas[0].text.count(' ')
+        attibute_concept['nb_text_idea_word_max'] = concept.ideas[0].text.count(' ')
         attibute_concept['length_text_idea'] = []
+        attibute_concept['nb_text_idea_word'] = []
         for idea in concept.ideas:
             attibute_concept['length_text_idea'].append(len(idea.text))
             attibute_concept['length_text_idea_mean'] += len(idea.text)
@@ -253,51 +251,20 @@ def map_knowledge(topics):
                 attibute_concept['length_text_idea_min'] = len(idea.text)
             if len(idea.text) > attibute_concept['length_text_idea_max']:
                 attibute_concept['length_text_idea_max'] = len(idea.text)
+            count_words = idea.text.count(' ')
+            attibute_concept['nb_text_idea_word_mean'] += count_words
+            if count_words < attibute_concept['nb_text_idea_word_min']:
+                attibute_concept['nb_text_idea_word_min'] = count_words
+            if count_words > attibute_concept['nb_text_idea_word_max']:
+                attibute_concept['nb_text_idea_word_max'] = count_words
+            attibute_concept['nb_text_idea_word'].append(count_words)
         attibute_concept['length_text_idea_mean'] /= float(max(attibute_concept['nb'], 1))
+        attibute_concept['nb_text_idea_word_mean'] /= float(max(attibute_concept['nb'], 1))
 
         stats.append(attibute_concept)
 
     saveData_dico('map_knowledge.csv', stats)
 
-
-def plot_knowledge(topics):
-    reduced_data = PCA(n_components=2).fit_transform(data)
-    kmeans = KMeans(init='k-means++', n_clusters=n_digits, n_init=10)
-    kmeans.fit(reduced_data)
-
-    # Step size of the mesh. Decrease to increase the quality of the VQ.
-    h = .02     # point in the mesh [x_min, x_max]x[y_min, y_max].
-
-    # Plot the decision boundary. For that, we will assign a color to each
-    x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
-    y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-
-    # Obtain labels for each point in mesh. Use last trained model.
-    Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()])
-
-    # Put the result into a color plot
-    Z = Z.reshape(xx.shape)
-    plt.figure(1)
-    plt.clf()
-    plt.imshow(Z, interpolation='nearest',
-               extent=(xx.min(), xx.max(), yy.min(), yy.max()),
-               cmap=plt.cm.Paired,
-               aspect='auto', origin='lower')
-
-    plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
-    # Plot the centroids as a white X
-    centroids = kmeans.cluster_centers_
-    plt.scatter(centroids[:, 0], centroids[:, 1],
-                marker='x', s=169, linewidths=3,
-                color='w', zorder=10)
-    plt.title('K-means clustering on the digits dataset (PCA-reduced data)\n'
-              'Centroids are marked with white cross')
-    plt.xlim(x_min, x_max)
-    plt.ylim(y_min, y_max)
-    plt.xticks(())
-    plt.yticks(())
-    plt.show()
 
 if __name__ == '__main__':
     create_knowledge()
