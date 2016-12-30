@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import copy
-from classifier_select import general_kw_predict, load_knowledge, VECTORIZER
+from classifier_select import general_kw_predict
 from core_idea import analyseIdeas
 from variables import *
 from main_knowledge import create_knowledge

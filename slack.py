@@ -2,7 +2,6 @@
 from variables import BOT_ID, SLACK_BOT_TOKEN
 
 
-import os
 import time
 from slackclient import SlackClient
 from core_idea import *

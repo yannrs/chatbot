@@ -8,11 +8,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neighbors import NearestCentroid
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import RidgeClassifier
-from sklearn.cluster import KMeans, MiniBatchKMeans
+from sklearn.neighbors import NearestNeighbors
 from sklearn import metrics
 from time import time
 import json
-from core_idea import Idea
 from core_concept import Concept
 import os
 
@@ -123,16 +122,26 @@ def general_kw_predict(X):
     y_guess = []
     y_max = -1
     y_proba_max = -1
-    # print 'general_kw_predict : X=', X
+    y_name = ""
+    i = 0
     for clf in ALL_CLASSIFIER:
         y_guess.append((clf.predict(X), clf.predict_proba(X)))
         if y_proba_max == -1:
             y_max = y_guess[-1][0][0]
             y_proba_max = y_guess[-1][1][0][y_max]
+            y_name = NAME_CLASSIFIERS[0]
         if y_proba_max < y_guess[-1][1][0][y_guess[-1][0][0]]:
             y_max = y_guess[-1][0][0]
             y_proba_max = y_guess[-1][1][0][y_max]
+            y_name = NAME_CLASSIFIERS[i]
+        i += 1
 
-    print 'general_kw_predict', y_proba_max, y_max
+    print 'general_kw_predict', y_proba_max, y_max, y_name
+    print y_guess
 
     return y_max
+
+
+def get_model_knn(training_set, n=3):
+    return NearestNeighbors(n_neighbors=n, algorithm='ball_tree').fit(training_set)
+

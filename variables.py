@@ -27,9 +27,9 @@ THRESHOLD_NB = 50
 
 NAME_CLASSIFIERS = [
     "kNN",
-    "Random forest",
-    "MultinomialNB",
-    "BernoulliNB"]
+    # "Random forest",
+    "MultinomialNB"]#,
+    # "BernoulliNB"]
 
 NAME_CLASSIFIERS2 = [
     "Ridge Classifier",

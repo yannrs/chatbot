@@ -90,3 +90,4 @@ Models/8_knowledge_concept.csv
 Models/9_knowledge_concept.csv
 Models/__init__.py
 knowledge_concept.csv
+*.png

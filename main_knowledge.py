@@ -8,9 +8,8 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 
 from util import plot_knowledge
 from time import time
-import copy
 
-MODE = 2
+MODE = 2        # Mode 1: Create all the knowledge; Mode 2: Used saved knowledge
 SAVE_KNOWLEDGE = 1
 
 
@@ -28,25 +27,17 @@ def create_knowledge():
     ## Read Data -> list of text
     data = readAllData_dico()
 
-    # ## Create concept from data according to one method
-    # topics = exploit_txt_ap2(data)
-    # print topics
-    #
-    # ## Learn to dissociate Concepts
-    # model = classify_concept(topics)
-    ###########################
-
     ###########################
     ### General analysis
     models, vectorizer, X, y, label_y = exploit_txt_ap3(data)
-    plot_knowledge(X, label_y)
+    save_knowledge_models(models)
+    # plot_knowledge(X, label_y)
     ### Local analysis
     if MODE == SAVE_KNOWLEDGE:
         topics = exploit_txt_ap2(data, X, label_y)
         print topics
 
         ## Save model
-        save_knowledge_models(models)
         save_knowledge_generic(vectorizer, 'vectorizer')
         save_knowledge_topics(SAVED_CONCEPTS, topics)
         map_knowledge(topics)
@@ -55,7 +46,6 @@ def create_knowledge():
         map_knowledge(topics)
 
         print topics
-
 
     return topics
 
@@ -227,7 +217,6 @@ def classify_concept(topics):
     return results
 
 
-# TODO: MAP of the knowledge = nb of idea by concept, nb of attribute
 def map_knowledge(topics):
     stats = []
     for concept_d in topics:

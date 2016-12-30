@@ -1,5 +1,0 @@
-{"startUrl":"https://en.wikipedia.org/wiki/Georgia_Institute_of_Technology","selectors":
-[{"parentSelectors":["_root"],"type":"SelectorText","multiple":true,"id":"gatech1","selector":"div.mw-content-ltr > p","regex":"","delay":""},
-{"parentSelectors":["_root"],"type":"SelectorLink","multiple":true,"id":"link","selector":"p:nth-of-type(n+2) > a","delay":""},
-{"parentSelectors":["link"],"type":"SelectorText","multiple":true,"id":"text","selector":"div.mw-content-ltr > p ","regex":"","delay":""}],
-"_id":"gatech"}

@@ -1,17 +1,11 @@
 # coding=utf-8
-import nltk
-import copy
 from nltk.corpus import wordnet
 from nltk.corpus import state_union
-from nltk.corpus import stopwords
-from nltk.tokenize import PunktSentenceTokenizer
-
-from variables import WEIGHT_SENTENCE, MAIN_ATTRIBUTE
-from Knowledges.preprocessing import *
-import json
 from scipy.sparse.linalg import norm
 
-# master_tokenizer = PunktSentenceTokenizer(state_union.raw("2005-GWBush.txt"))
+from Knowledges.preprocessing import *
+import json, copy
+
 master_tokenizer = PunktSentenceTokenizer(state_union.raw(PATH+"gatech_wiki_clean_v3.csv"))
 
 

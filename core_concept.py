@@ -1,19 +1,8 @@
 # coding=utf-8
-from variables import WEIGHT_SENTENCE, MAIN_ATTRIBUTE
-from Knowledges.preprocessing import *
 from core_idea import *
-# from classifier_select import train_cluster, select_cluster
-
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.cluster import KMeans, MiniBatchKMeans
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import Normalizer
-from sklearn import metrics
-import numpy as np
+from sklearn.neighbors import NearestNeighbors
 from scipy.sparse import hstack, vstack
 
 from util import plot_knowledge
@@ -40,6 +29,7 @@ class Concept:
         self.label = label  # Main label of this concept
 
         self.model = -1     # Model to decide if a text is part of this concept
+        self.model_knn = -1 # Model for Knn
 
     def __repr__(self):
         return str(self.label) + ' - Nb ideas:' + str(len(self.ideas)) + ' ; Nb features:' + str(len(self.idea_feature_word))
@@ -63,7 +53,6 @@ class Concept:
         t0 = time()
 
         ## Update Ideas, by adding link to features selected
-        # update_ideas(self.ideas, self.idea_feature_word)
         update_ideas_v2(self.ideas, self.idea_vectorizer)
         # a = merge_synonym(self.feature_idea)
 
@@ -113,7 +102,6 @@ class Concept:
         - None
     """
     def generate_model_ideas(self):
-        # TODO: generate a model which can select ideas according to a user input (idea)
         training_set = []
         for idea in self.ideas:
             if training_set == []:
@@ -122,9 +110,10 @@ class Concept:
                 training_set = vstack((training_set, idea.features_vect))
 
         self.model = train_cluster(training_set)
+        self.model_knn = NearestNeighbors(n_neighbors=3, algorithm='ball_tree').fit(training_set)
         self.idea_model_label = self.model.labels_
 
-        # plot_knowledge(training_set, [1 for k in xrange(len(self.ideas))])
+        # plot_knowledge(training_set, [1 for k in xrange(len(self.ideas))], self.label)
 
     """ From an external idea, select the set of idea which are the closest
     Input:
@@ -139,7 +128,8 @@ class Concept:
 
         # Predict which ideas are linked to the reference idea
         label = select_cluster(self.model, feature_idea)
-        print 'label', len(label), label
+        print 'label predicted for this idea', len(label), label
+
         return label
 
         # # Get idea which are on the same cluster than the user idea
@@ -150,6 +140,9 @@ class Concept:
         #         useful_ideas.append(self.ideas[i])
         #
         # return useful_ideas
+
+    def predict_knn(self, X):
+        return self.model_knn.kneighbors(X)
 
     def toSave(self):
         content = {}
@@ -177,11 +170,13 @@ Output:
     - sklearnModel: MiniBatchKMeans
 """
 def train_cluster(X):
-    true_k = int(X.shape[0]*0.5)
+    true_k = int(X.shape[0]*0.2)
     print true_k
     print 'X', type(X), X.shape
-    km = MiniBatchKMeans(n_clusters=true_k, init='k-means++', n_init=1,
-                         init_size=1000, batch_size=1000, verbose="")
+    # km = MiniBatchKMeans(n_clusters=true_k, init='k-means++', n_init=1,
+    #                      init_size=1000, batch_size=1000, verbose="")
+    km = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=1,
+                verbose="")
     print("Clustering sparse data with %s" % km)
     t0 = time()
     km.fit(X)

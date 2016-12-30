@@ -1,25 +1,19 @@
 # coding=utf-8
 
-# import sklearn
-from nltk.tokenize import sent_tokenize, word_tokenize
+import nltk
+from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-import nltk
-# from nltk.corpus import state_union
 from nltk.tokenize import PunktSentenceTokenizer
 from nltk.stem import WordNetLemmatizer
-from nltk.corpus import movie_reviews, wordnet
 from nltk.classify.scikitlearn import SklearnClassifier
 
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.svm import SVC, LinearSVC, NuSVC
-from sklearn.cluster import KMeans
+from sklearn.svm import SVC, LinearSVC
 
 import pickle
-import random
-import json
-import os
+import os, re
 
 from variables import *
 
@@ -87,7 +81,7 @@ def preproc_it(data):
     return [w.lower().encode('utf-8', 'ignore') for w in word_tokenize(data) if not w in stop_words]
     # return [lemmatizer.lemmatize(w).lower().encode('ascii', 'ignore') for w in word_tokenize(data) if not w in stop_words]
 
-
+pattern = re.compile(("[a-zA-Z\s]+"))
 """ From a list of words, try to keep only diverse idea
 Input:
     - data: [word1, word2, ...]
@@ -98,15 +92,22 @@ Output:
 def merge_synonym(data, all=False):
     n_data = []
     for w in data:
-        if not ' ' in w:
-            n_w = lemmatizer.lemmatize(w.encode('utf-8', 'ignore'))
-            if n_w not in n_data or all:
-                n_data.append(n_w)
-        else:
-            l_w = w.split(' ')
-            n_w = ' '.join(merge_synonym(l_w))
-            if n_w not in n_data or all:
-                n_data.append(n_w)
+        try:
+            if pattern.match(w):
+                if not ' ' in w:
+                    n_w = lemmatizer.lemmatize(w.encode('utf-8', 'ignore'))
+                    if n_w not in n_data or all:
+                        n_data.append(n_w)
+                else:
+                    l_w = w.split(' ')
+                    n_w = ' '.join(merge_synonym(l_w))
+                    if n_w not in n_data or all:
+                        n_data.append(n_w)
+            else:
+                n_data.append(w)
+        except Exception as e:
+            print w
+            raise e
     return n_data
 
 
