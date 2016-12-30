@@ -1,4 +1,12 @@
 ################ PROJECT 3 - Alternative ################
+# From Class: CS 7637 - Knowledge-Based AI, Fall 2016
+# Author: Yann RAVEL-SIBILLOT
+# Date started: 11/05/2016		(5 November 2016)
+
+# Final Report: 
+https://mega.nz/#!k19nkD6Y!MY6yQUm948A_x2UrrFMbsa7OnWqe3ztUKG3vyZ7x_aA
+
+
 # Required:
 python 2.7
 scikit-learn >0.18
