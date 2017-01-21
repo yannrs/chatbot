@@ -193,8 +193,7 @@ def get_concepts(knowledge_user):
     # concept_label = [str(k) for k in concept_label]
 
     # Get Concepts from label found
-    for k in knowledge_idea:
-        for k_sub in k["concept"]:
+    for k_sub in knowledge_idea:
             if k_sub.label in concept_label:
                 print k_sub
                 concept_new.append(k_sub)
